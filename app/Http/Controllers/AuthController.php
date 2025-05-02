@@ -10,9 +10,15 @@ use Illuminate\Http\JsonResponse;
 
 class AuthController extends Controller
 {
+    /**
+     * Register a new user.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function register(Request $request): JsonResponse
     {
-        // Only admins can access this endpoint (ensured by middleware)
+        // Validate the request
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
@@ -24,6 +30,7 @@ class AuthController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        // Create the user
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -31,7 +38,8 @@ class AuthController extends Controller
             'role' => $request->role,
         ]);
 
-        $token = $user->createToken('auth_token', [$user->role])->plainTextToken;
+        // Generate the token for authentication (without role as scope unless necessary)
+        $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'message' => 'Account created successfully',
@@ -40,8 +48,15 @@ class AuthController extends Controller
         ], 201);
     }
 
+    /**
+     * Login a user.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function login(Request $request): JsonResponse
     {
+        // Validate the request
         $validator = Validator::make($request->all(), [
             'email' => 'required|string|email',
             'password' => 'required|string',
@@ -51,13 +66,20 @@ class AuthController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        // Find the user by email
         $user = User::where('email', $request->email)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
         }
 
-        $token = $user->createToken('auth_token', [$user->role])->plainTextToken;
+        // Check the password
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => 'Password mismatch'], 401);
+        }
+
+        // Generate the token
+        $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'message' => 'Login successful',
@@ -66,8 +88,15 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * Logout the authenticated user.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function logout(Request $request): JsonResponse
     {
+        // Delete the user's current token
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Logged out successfully']);

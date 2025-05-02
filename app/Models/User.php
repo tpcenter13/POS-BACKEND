@@ -24,7 +24,6 @@ class User extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password' => 'hashed',
     ];
 
     public static $roles = ['cashier', 'admin'];
@@ -38,4 +37,6 @@ class User extends Authenticatable
     {
         return $this->role === 'cashier';
     }
+
+    // Removed mutator to avoid double hashing
 }
