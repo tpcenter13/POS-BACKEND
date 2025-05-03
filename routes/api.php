@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ProductController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -22,6 +24,13 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [App\Http\Controllers\UserController::class, 'getCurrentUser']);
     Route::post('/logout', [App\Http\Controllers\AuthController::class, 'logout']);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/products', [ProductController::class, 'store']);
+    Route::get('/products', [ProductController::class, 'index']);
+    Route::put('/products/{id}', [ProductController::class, 'update']);
+    Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
